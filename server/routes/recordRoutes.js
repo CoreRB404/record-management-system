@@ -14,12 +14,12 @@ const { recordValidation, idParamValidation, searchQueryValidation } = require('
 // All record routes require authentication
 router.use(protect);
 
-router.route('/').get(searchQueryValidation, getRecords).post(recordValidation, createRecord);
+router.route('/').get(searchQueryValidation, getRecords).post(authorize('admin'), recordValidation, createRecord);
 router.delete('/category/:categoryId', authorize('admin'), deleteRecordsByCategory);
 router
     .route('/:id')
     .get(idParamValidation, getRecord)
-    .put(idParamValidation, recordValidation, updateRecord)
-    .delete(idParamValidation, deleteRecord);
+    .put(authorize('admin'), idParamValidation, recordValidation, updateRecord)
+    .delete(authorize('admin'), idParamValidation, deleteRecord);
 
 module.exports = router;

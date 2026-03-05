@@ -24,7 +24,6 @@ const Sidebar = ({ isOpen, onToggle }) => {
         { to: '/records', icon: <IoDocumentText />, label: 'Records' },
         { to: '/categories', icon: <IoGrid />, label: 'Categories' },
         { to: '/reports', icon: <IoBarChart />, label: 'Reports' },
-        { to: '/trash', icon: <IoTrash />, label: 'Trash' },
     ];
 
     const links = isAdmin ? adminLinks : userLinks;

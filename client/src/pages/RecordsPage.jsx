@@ -257,9 +257,11 @@ const RecordsPage = () => {
                     <h1>Records</h1>
                     <p className="page-subtitle">Manage your records and entries</p>
                 </div>
-                <button className="btn btn-primary" onClick={openCreateModal} id="create-record-btn">
-                    <IoAdd /> New Record
-                </button>
+                {isAdmin && (
+                    <button className="btn btn-primary" onClick={openCreateModal} id="create-record-btn">
+                        <IoAdd /> New Record
+                    </button>
+                )}
             </div>
 
             {/* ── Filters ──────────────────────────────────────── */}
@@ -366,9 +368,11 @@ const RecordsPage = () => {
                     <IoDocumentText className="empty-icon" />
                     <h3>No records found</h3>
                     <p>Create your first record or adjust your filters.</p>
-                    <button className="btn btn-primary" onClick={openCreateModal}>
-                        <IoAdd /> Create Record
-                    </button>
+                    {isAdmin && (
+                        <button className="btn btn-primary" onClick={openCreateModal}>
+                            <IoAdd /> Create Record
+                        </button>
+                    )}
                 </div>
             ) : (
                 <>
@@ -410,12 +414,16 @@ const RecordsPage = () => {
                                                 <button className="btn-icon btn-view" onClick={() => openViewModal(r)} title="View">
                                                     <IoEye />
                                                 </button>
-                                                <button className="btn-icon btn-edit" onClick={() => openEditModal(r)} title="Edit">
-                                                    <IoCreate />
-                                                </button>
-                                                <button className="btn-icon btn-delete" onClick={() => handleDelete(r._id)} title="Delete">
-                                                    <IoTrash />
-                                                </button>
+                                                {isAdmin && (
+                                                    <>
+                                                        <button className="btn-icon btn-edit" onClick={() => openEditModal(r)} title="Edit">
+                                                            <IoCreate />
+                                                        </button>
+                                                        <button className="btn-icon btn-delete" onClick={() => handleDelete(r._id)} title="Delete">
+                                                            <IoTrash />
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -51,7 +51,14 @@ function App() {
                             }
                         />
                         <Route path="/reports" element={<ReportsPage />} />
-                        <Route path="/trash" element={<TrashPage />} />
+                        <Route
+                            path="/trash"
+                            element={
+                                <ProtectedRoute adminOnly>
+                                    <TrashPage />
+                                </ProtectedRoute>
+                            }
+                        />
                     </Route>
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
