@@ -1,0 +1,64 @@
+# ──────────────────────────────────────────────────────────────────────
+# Render Infrastructure-as-Code Blueprint
+# https://render.com/docs/blueprint-spec
+#
+# Usage:
+#   1. Push this repo to GitHub/GitLab
+#   2. Go to https://dashboard.render.com → New → Blueprint
+#   3. Connect the repo — Render reads this file and creates both services
+#   4. Fill in the secret environment variables when prompted
+# ──────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Backend API (Web Service) ─────────────────────────────────────
+  - type: web
+    name: record-management-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false          # You will be prompted to enter this secret
+      - key: JWT_SECRET
+        generateValue: true  # Render auto-generates a secure random secret
+      - key: JWT_EXPIRE
+        value: 1d
+      - key: CORS_ORIGIN
+        value: https://record-management-client.onrender.com
+        # ↑ Update this after the static site is created if the name differs
+
+  # ── Frontend (Static Site) ────────────────────────────────────────
+  - type: web
+    name: record-management-client
+    runtime: static
+    plan: free
+    rootDir: client
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      # SPA catch-all — send all non-file paths to index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://record-management-api.onrender.com
+        # ↑ Update this after the API service is created if the name differs
