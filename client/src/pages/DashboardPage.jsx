@@ -142,8 +142,8 @@ const DashboardPage = () => {
                 </div>
             )}
 
-            {/* ── User: Upcoming Records ───────────────────────── */}
-            {!isAdmin && data.upcomingRecords?.length > 0 && (
+            {/* ── Upcoming Records ─────────────────────────── */}
+            {data.upcomingRecords?.length > 0 && (
                 <div className="chart-card" style={{ marginTop: '1.5rem' }}>
                     <h3 className="chart-title">
                         <IoTrendingUp style={{ marginRight: 8 }} />

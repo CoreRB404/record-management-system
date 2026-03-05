@@ -72,6 +72,14 @@ const getAdminDashboard = async (req, res, next) => {
             .sort({ createdAt: -1 })
             .limit(5);
 
+        // Upcoming records (future dates)
+        const upcomingRecords = await Record.find({
+            date: { $gte: now },
+        })
+            .populate('category', 'name color icon')
+            .sort({ date: 1 })
+            .limit(5);
+
         res.status(200).json({
             success: true,
             data: {
@@ -85,6 +93,7 @@ const getAdminDashboard = async (req, res, next) => {
                 recordsByCategory,
                 recordsByMonth,
                 recentRecords,
+                upcomingRecords,
             },
         });
     } catch (error) {
