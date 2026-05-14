@@ -12,6 +12,10 @@ const buildTransporter = () => {
     const port = Number(process.env.SMTP_PORT || 587);
     const secure = process.env.SMTP_SECURE === 'true';
 
+    require('dns').lookup(host, (err, address) => {
+        console.log(`[Email] DNS Resolution for ${host}: ${address || 'FAILED'} ${err ? err.message : ''}`);
+    });
+
     console.log(`[Email] Creating transporter for ${host}:${port} (secure: ${secure})`);
 
     return nodemailer.createTransport({
@@ -19,8 +23,9 @@ const buildTransporter = () => {
         port,
         secure,
         auth: { user, pass },
-        connectionTimeout: 10000, // 10 seconds timeout
-        greetingTimeout: 10000,
+        connectionTimeout: 30000, // 30 seconds
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
     });
 };
 
