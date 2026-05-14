@@ -1,73 +1,40 @@
-const nodemailer = require('nodemailer');
-
-const buildTransporter = () => {
-    const host = process.env.SMTP_HOST;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASS;
-
-    if (!host || !user || !pass) {
-        return null;
-    }
-
-    const port = Number(process.env.SMTP_PORT || 587);
-    const secure = process.env.SMTP_SECURE === 'true';
-
-    require('dns').lookup(host, (err, address) => {
-        console.log(`[Email] DNS Resolution for ${host}: ${address || 'FAILED'} ${err ? err.message : ''}`);
-    });
-
-    console.log(`[Email] Creating transporter for ${host}:${port} (secure: ${secure})`);
-
-    return nodemailer.createTransport({
-        service: 'gmail', // Uses Nodemailer's internal Gmail settings
-        auth: { user, pass },
-        connectionTimeout: 30000,
-        greetingTimeout: 30000,
-        socketTimeout: 30000,
-        logger: true,
-        debug: true,
-        tls: {
-            rejectUnauthorized: false
-        }
-    });
-};
-
 const isEmailConfigured = () => {
-    return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
-};
-
-const getFromAddress = () => {
-    const name = process.env.SMTP_NAME || 'RecordMS';
-    const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-
-    if (!from) {
-        return `"${name}" <no-reply@example.com>`;
-    }
-
-    return `"${name}" <${from}>`;
+    // We'll use the Web3Forms key from your portfolio
+    return true; 
 };
 
 const sendEmail = async ({ to, subject, html, text }) => {
-    const transporter = buildTransporter();
-    if (!transporter) {
-        throw new Error('SMTP is not configured');
-    }
-
-    const toList = Array.isArray(to) ? to.join(',') : to;
+    const access_key = 'a2ff65d9-9173-415f-b040-c4a9ff0ff66e';
+    
+    console.log(`[Email] Attempting to send email via Web3Forms to: ${to}`);
 
     try {
-        console.log(`[Email] Attempting to send email to: ${toList}`);
-        const info = await transporter.sendMail({
-            from: getFromAddress(),
-            to: toList,
-            subject,
-            html,
-            text,
+        const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                access_key,
+                subject: subject,
+                from_name: process.env.SMTP_NAME || 'RecordMS',
+                to: Array.isArray(to) ? to.join(', ') : to,
+                message: text,
+                html: html // Web3Forms supports HTML in the message field or via specific templates
+            })
         });
-        console.log(`[Email] Message sent successfully! ID: ${info.messageId}`);
-        return info;
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log(`[Email] Message sent successfully via Web3Forms!`);
+            return result;
+        } else {
+            throw new Error(result.message || 'Web3Forms submission failed');
+        }
     } catch (error) {
-        console.error(`[Email] Error occurred while sending: ${error.message}`);
+        console.error(`[Email] Web3Forms Error: ${error.message}`);
         throw error;
     }
 };
