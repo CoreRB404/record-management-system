@@ -4,7 +4,7 @@ const isEmailConfigured = () => {
 };
 
 const sendEmail = async ({ to, subject, html, text }) => {
-    const access_key = 'a2ff65d9-9173-415f-b040-c4a9ff0ff66e';
+    const access_key = process.env.WEB3FORMS_ACCESS_KEY || 'a2ff65d9-9173-415f-b040-c4a9ff0ff66e';
     
     console.log(`[Email] Attempting to send email via Web3Forms to: ${to}`);
 
