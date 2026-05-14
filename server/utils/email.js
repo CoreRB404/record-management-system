@@ -1,48 +1,42 @@
+const nodemailer = require('nodemailer');
+
 const isEmailConfigured = () => {
-    return true; 
+    return Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 };
 
 const sendEmail = async ({ to, subject, html, text }) => {
-    const access_key = process.env.WEB3FORMS_ACCESS_KEY || 'a2ff65d9-9173-415f-b040-c4a9ff0ff66e';
+    const user = process.env.SMTP_USER || 'realblessagorde@gmail.com';
+    const pass = (process.env.SMTP_PASS || 'tskpzwszmzvekipt').replace(/\s+/g, ''); // Auto-remove spaces
     
-    console.log(`[Email] Attempting to send email via Web3Forms...`);
+    console.log(`[Email] Final Attempt: Connecting to smtp.googlemail.com:587...`);
+
+    const transporter = nodemailer.createTransport({
+        host: 'smtp.googlemail.com', // Using the alternative alias
+        port: 587,
+        secure: false, // STARTTLS
+        auth: { user, pass },
+        tls: {
+            ciphers: 'SSLv3', // Force older cipher which sometimes helps on cloud networks
+            rejectUnauthorized: false
+        },
+        debug: true,
+        logger: true
+    });
 
     try {
-        const response = await fetch('https://api.web3forms.com/submit', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                access_key,
-                subject: subject,
-                from_name: 'RecordMS',
-                // Web3Forms sends TO the email associated with the access key.
-                // We put the intended recipients in the message so you see them.
-                message: `To: ${Array.isArray(to) ? to.join(', ') : to}\n\n${text || 'New notification from RecordMS'}`
-            })
+        const info = await transporter.sendMail({
+            from: `"RecordMS" <${user}>`,
+            to: Array.isArray(to) ? to.join(', ') : to,
+            subject,
+            text,
+            html
         });
-
-        const status = response.status;
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-            const result = await response.json();
-            if (result.success) {
-                console.log(`[Email] Message sent successfully via Web3Forms!`);
-                return result;
-            } else {
-                console.error(`[Email] Web3Forms API Error: ${result.message}`);
-                throw new Error(result.message);
-            }
-        } else {
-            const rawBody = await response.text();
-            console.error(`[Email] Web3Forms returned non-JSON response (Status ${status}): ${rawBody.substring(0, 200)}`);
-            throw new Error(`Web3Forms server error (Status ${status})`);
-        }
+        console.log(`[Email] SUCCESS! Message sent: ${info.messageId}`);
+        return info;
     } catch (error) {
-        console.error(`[Email] Web3Forms Catch: ${error.message}`);
+        console.error(`[Email] FAILED: ${error.message}`);
+        
+        // If this also fails, I'll explain the next step (Need a dedicated service like SendGrid)
         throw error;
     }
 };
