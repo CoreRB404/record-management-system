@@ -14,6 +14,7 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const trashRoutes = require('./routes/trashRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -152,6 +153,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/trash', trashRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // ── Health Check ─────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
