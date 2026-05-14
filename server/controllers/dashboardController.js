@@ -2,6 +2,15 @@ const Record = require('../models/Record');
 const User = require('../models/User');
 const Category = require('../models/Category');
 
+// Helper to get "now" in the user's timezone
+const getNowInTimeZone = () => {
+    const tz = process.env.AUTOPOST_TZ || 'Asia/Manila';
+    const now = new Date();
+    // Use Intl to get the localized date string and convert back to Date
+    const localizedString = now.toLocaleString('en-US', { timeZone: tz });
+    return new Date(localizedString);
+};
+
 /**
  * @desc    Get admin dashboard stats
  * @route   GET /api/dashboard/admin
@@ -9,6 +18,8 @@ const Category = require('../models/Category');
  */
 const getAdminDashboard = async (req, res, next) => {
     try {
+        const now = getNowInTimeZone();
+        
         // Basic counts
         const totalUsers = await User.countDocuments();
         const activeUsers = await User.countDocuments({ isActive: true });
@@ -16,7 +27,6 @@ const getAdminDashboard = async (req, res, next) => {
         const totalCategories = await Category.countDocuments();
 
         // Records this month
-        const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const recordsThisMonth = await Record.countDocuments({
             createdAt: { $gte: startOfMonth },
@@ -45,7 +55,7 @@ const getAdminDashboard = async (req, res, next) => {
         ]);
 
         // Records by month (last 6 months)
-        const sixMonthsAgo = new Date();
+        const sixMonthsAgo = new Date(now);
         sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
         const recordsByMonth = await Record.aggregate([
@@ -108,11 +118,12 @@ const getAdminDashboard = async (req, res, next) => {
  */
 const getUserDashboard = async (req, res, next) => {
     try {
+        const now = getNowInTimeZone();
+
         // Show all system records (not just user's own)
         const totalRecords = await Record.countDocuments();
 
         // Records this month (system-wide)
-        const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const recordsThisMonth = await Record.countDocuments({
             createdAt: { $gte: startOfMonth },
