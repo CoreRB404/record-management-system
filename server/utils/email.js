@@ -23,9 +23,14 @@ const buildTransporter = () => {
         port,
         secure,
         auth: { user, pass },
-        connectionTimeout: 30000, // 30 seconds
+        connectionTimeout: 30000,
         greetingTimeout: 30000,
         socketTimeout: 30000,
+        logger: true, // Log all SMTP traffic to console
+        debug: true,  // Include more verbose debug info
+        tls: {
+            rejectUnauthorized: false // Helps bypass some cloud network handshake issues
+        }
     });
 };
 
