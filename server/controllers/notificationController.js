@@ -3,7 +3,7 @@ const NotificationSetting = require('../models/NotificationSetting');
 const { getMonthDay, buildRecordDrafts, renderDraftEmail, renderDraftText } = require('../utils/postComposer');
 const { sendEmail, isEmailConfigured } = require('../utils/email');
 
-const TIMEZONE = process.env.AUTOPOST_TZ || 'UTC';
+const TIMEZONE = process.env.AUTOPOST_TZ || 'Asia/Manila';
 
 const getOrCreateSettings = async () => {
     let settings = await NotificationSetting.findOne({ key: 'emailNotifications' });
