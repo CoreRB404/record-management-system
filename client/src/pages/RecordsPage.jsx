@@ -33,6 +33,7 @@ const RecordsPage = () => {
 
     // Filter modes: 'range', 'month', 'year'
     const [dateMode, setDateMode] = useState('range');
+    const [isRecurring, setIsRecurring] = useState(false);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [availableYears, setAvailableYears] = useState([]);
@@ -63,6 +64,7 @@ const RecordsPage = () => {
                 sortField,
                 sortOrder,
                 tzOffset,
+                isRecurring: isRecurring ? 'true' : 'false',
             };
             if (search) params.search = search;
             if (categoryFilter) params.category = categoryFilter;
@@ -86,7 +88,7 @@ const RecordsPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [search, categoryFilter, dateFrom, dateTo, sortField, sortOrder, dateMode, selectedMonth, selectedYear]);
+    }, [search, categoryFilter, dateFrom, dateTo, sortField, sortOrder, dateMode, selectedMonth, selectedYear, isRecurring]);
 
     const fetchCategories = async () => {
         try {
@@ -245,10 +247,11 @@ const RecordsPage = () => {
         setDateFrom('');
         setDateTo('');
         setDateMode('range');
+        setIsRecurring(false);
         setSelectedMonth(new Date().getMonth());
     };
 
-    const hasActiveFilters = search || categoryFilter || dateFrom || dateTo || dateMode !== 'range';
+    const hasActiveFilters = search || categoryFilter || dateFrom || dateTo || dateMode !== 'range' || isRecurring;
 
     return (
         <div className="records-page">
@@ -303,6 +306,18 @@ const RecordsPage = () => {
                     <button className={`date-mode-tab ${dateMode === 'year' ? 'active' : ''}`} onClick={() => setDateMode('year')}>
                         <IoCalendar /> Year
                     </button>
+                </div>
+
+                <div className="filter-group" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        <input
+                            type="checkbox"
+                            style={{ width: '16px', height: '16px' }}
+                            checked={isRecurring}
+                            onChange={(e) => setIsRecurring(e.target.checked)}
+                        />
+                        Recurring
+                    </label>
                 </div>
 
                 <div className="filter-group date-inputs" style={{ display: 'flex', gap: '0.5rem' }}>
