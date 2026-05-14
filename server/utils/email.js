@@ -1,42 +1,43 @@
-const nodemailer = require('nodemailer');
-
 const isEmailConfigured = () => {
-    return Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
+    return true; 
 };
 
 const sendEmail = async ({ to, subject, html, text }) => {
-    const user = process.env.SMTP_USER || 'realblessagorde@gmail.com';
-    const pass = (process.env.SMTP_PASS || 'tskpzwszmzvekipt').replace(/\s+/g, ''); // Auto-remove spaces
+    const apiToken = process.env.MAILTRAP_API_TOKEN || '5535cde86977639d2ed1852f72fc58f4';
     
-    console.log(`[Email] Final Attempt: Connecting to smtp.googlemail.com:587...`);
-
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.googlemail.com', // Using the alternative alias
-        port: 587,
-        secure: false, // STARTTLS
-        auth: { user, pass },
-        tls: {
-            ciphers: 'SSLv3', // Force older cipher which sometimes helps on cloud networks
-            rejectUnauthorized: false
-        },
-        debug: true,
-        logger: true
-    });
+    console.log(`[Email] Sending via Mailtrap API to: ${to}`);
 
     try {
-        const info = await transporter.sendMail({
-            from: `"RecordMS" <${user}>`,
-            to: Array.isArray(to) ? to.join(', ') : to,
-            subject,
-            text,
-            html
+        const response = await fetch('https://send.api.mailtrap.io/api/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                from: {
+                    email: "hello@demomailtrap.co", // Exact email from your screenshot
+                    name: "RecordMS Notifications"
+                },
+                to: (Array.isArray(to) ? to : [to]).map(email => ({ email })),
+                subject: subject,
+                text: text,
+                html: html,
+                category: "Notification"
+            })
         });
-        console.log(`[Email] SUCCESS! Message sent: ${info.messageId}`);
-        return info;
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            console.log(`[Email] SUCCESS! Sent via Mailtrap. ID: ${result.message_ids?.join(', ')}`);
+            return result;
+        } else {
+            console.error(`[Email] Mailtrap Error: ${JSON.stringify(result)}`);
+            throw new Error(result.errors ? result.errors.join(', ') : 'Mailtrap send failed');
+        }
     } catch (error) {
-        console.error(`[Email] FAILED: ${error.message}`);
-        
-        // If this also fails, I'll explain the next step (Need a dedicated service like SendGrid)
+        console.error(`[Email] Mailtrap Catch: ${error.message}`);
         throw error;
     }
 };
