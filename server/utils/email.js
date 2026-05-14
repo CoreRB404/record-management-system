@@ -12,11 +12,15 @@ const buildTransporter = () => {
     const port = Number(process.env.SMTP_PORT || 587);
     const secure = process.env.SMTP_SECURE === 'true';
 
+    console.log(`[Email] Creating transporter for ${host}:${port} (secure: ${secure})`);
+
     return nodemailer.createTransport({
         host,
         port,
         secure,
         auth: { user, pass },
+        connectionTimeout: 10000, // 10 seconds timeout
+        greetingTimeout: 10000,
     });
 };
 
@@ -43,13 +47,21 @@ const sendEmail = async ({ to, subject, html, text }) => {
 
     const toList = Array.isArray(to) ? to.join(',') : to;
 
-    return transporter.sendMail({
-        from: getFromAddress(),
-        to: toList,
-        subject,
-        html,
-        text,
-    });
+    try {
+        console.log(`[Email] Attempting to send email to: ${toList}`);
+        const info = await transporter.sendMail({
+            from: getFromAddress(),
+            to: toList,
+            subject,
+            html,
+            text,
+        });
+        console.log(`[Email] Message sent successfully! ID: ${info.messageId}`);
+        return info;
+    } catch (error) {
+        console.error(`[Email] Error occurred while sending: ${error.message}`);
+        throw error;
+    }
 };
 
 module.exports = { sendEmail, isEmailConfigured };
