@@ -67,7 +67,7 @@ const getRecords = async (req, res, next) => {
         }
 
         // Date / Month / Year Filtering
-        if (req.query.month) {
+        if (req.query.month && !req.query.isRecurring) {
             const monthNum = parseInt(req.query.month, 10);
             if (monthNum >= 1 && monthNum <= 12) {
                 const tz = getTzString(req.query.tzOffset);
@@ -75,6 +75,33 @@ const getRecords = async (req, res, next) => {
                     $eq: [{ $month: { date: '$date', timezone: tz } }, monthNum],
                 };
             }
+        } else if (req.query.isRecurring === 'true' && (req.query.dateFrom || req.query.dateTo)) {
+            // Recurring Range (ignores year)
+            const tz = getTzString(req.query.tzOffset);
+            const from = req.query.dateFrom ? new Date(req.query.dateFrom) : null;
+            const to = req.query.dateTo ? new Date(req.query.dateTo) : null;
+
+            const fromScore = from ? (from.getUTCMonth() + 1) * 100 + from.getUTCDate() : 0;
+            const toScore = to ? (to.getUTCMonth() + 1) * 100 + to.getUTCDate() : 1300;
+
+            filter.$expr = {
+                $let: {
+                    vars: {
+                        recordScore: {
+                            $add: [
+                                { $multiply: [{ $month: { date: '$date', timezone: tz } }, 100] },
+                                { $dayOfMonth: { date: '$date', timezone: tz } }
+                            ]
+                        }
+                    },
+                    in: {
+                        $and: [
+                            { $gte: ['$$recordScore', fromScore] },
+                            { $lte: ['$$recordScore', toScore] }
+                        ]
+                    }
+                }
+            };
         } else if (req.query.dateFrom || req.query.dateTo) {
             filter.date = {};
             if (req.query.dateFrom) {
